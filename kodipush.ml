@@ -2,9 +2,8 @@ open Lwt
 open Cohttp
 open Cohttp_lwt_unix
 
+(** leaks fds when transfer is interrupted *)
 let body_of_file ?(range=(None, None)) filename =
-  let st, push_st = Lwt_stream.create_bounded 100 in
-  let body = Cohttp_lwt_body.of_stream st in
   let file = open_in filename in
   let bytes_left, range =
     let total = in_channel_length file in
@@ -20,32 +19,24 @@ let body_of_file ?(range=(None, None)) filename =
       | (Some r0, Some r1) ->
         (ref (r1 - r0 + 1), ((r0, r1), total))
   in
-  let _ =
-    Lwt.catch (fun () ->
-      let rec respond () =
-	let buffer = Bytes.create (max 0 (min 4096 !bytes_left)) in
-	let got =
-	  if Bytes.length buffer > 0
-	  then input file buffer 0 (Bytes.length buffer)
-	  else 0
-	in
-	if got = 0
-	then begin
-	  push_st#close;
-	  close_in file;
-	  Lwt.return ()
-	end
-	else begin
-	  bytes_left := !bytes_left - got;
-	  push_st#push buffer >>=
-	  respond
-	end
-      in respond ()
-    ) (fun exn ->
-      close_in file;
-      return ()
-    )
+  let stream = Lwt_stream.from @@ fun () -> 
+    let buffer = Bytes.create (max 0 (min 65536 !bytes_left)) in
+    let got =
+      if Bytes.length buffer > 0
+      then input file buffer 0 (Bytes.length buffer)
+      else 0
+    in
+    if got = 0
+    then begin
+      Lwt.return None
+    end
+    else begin
+      bytes_left := !bytes_left - got;
+      Lwt.return (Some (String.sub buffer 0 got))
+    end
   in
+  Lwt_stream.on_termination stream (fun () -> close_in file);
+  let body = Cohttp_lwt_body.of_stream stream in
   Lwt.return (range, body)
 
 let range_of_headers =
