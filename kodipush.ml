@@ -20,7 +20,7 @@ let server external_address filename kodi_address =
     >>= (fun (headers_out, status, body) -> Server.respond ~headers:headers_out ~status ~body ())
   in
   let port = 8000 in
-  let url = Printf.sprintf "http://%s:%d/%s" external_address port (Filename.basename filename) in
+  let url = Printf.sprintf "http://%s:%d/%s" external_address port (Uri.pct_encode (Filename.basename filename)) in
   let server_done = Lwt_mvar.create_empty () in
   Printf.printf "%s\n%!" url;
   Lwt.async (fun () ->
