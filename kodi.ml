@@ -2,19 +2,16 @@ open Lwt
 open Cohttp
 open Cohttp_lwt_unix
 
-let player_open kodi_host url =
-  let json =
-    `Assoc [
-      ("jsonrpc", `String "2.0");
-      ("method", `String "Player.Open");
-      ("params", `Assoc [
-          ("item", `Assoc [
-              ("file", `String url)
-            ])
-        ]);
-      ("id", `Int 1)
-    ]
-  in
+let jsonrpc params =
+  `Assoc [
+    ("jsonrpc", `String "2.0");
+    ("method", `String "Player.Open");
+    ("params", params);
+    ("id", `Int 1)
+  ]
+
+let request kodi_host params =
+  let json = jsonrpc params in
 
   let headers = Header.init () in
   let headers = Header.add headers "Content-Type" "application/json" in
@@ -26,5 +23,12 @@ let player_open kodi_host url =
   body |> Cohttp_lwt_body.to_string >|= fun body ->
   Printf.printf "Body: %s\n%!" body;
   ()
+
+let player_open kodi_host url =
+  request kodi_host  (`Assoc [
+      ("item", `Assoc [
+          ("file", `String url)
+        ])
+    ])
 
 (* curl -H 'Content-Type: application/json' --data-binary '{ "jsonrpc": "2.0", "method": "Player.Open", "params": { "item": { "file": "'"${1}"'" } }, "id": 1 }' "${XBMC_HOST}/jsonrpc" *)
