@@ -8,5 +8,6 @@ true: package(cohttp), \
 	 package(re.pcre), \
 	 package(cmdliner), \
 	 package(containers), \
+	 package(yojson), \
 	 package(extunix)
 

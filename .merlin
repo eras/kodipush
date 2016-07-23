@@ -7,4 +7,5 @@ PKG re
 PKG cmdliner
 PKG extunix
 PKG containers
+PKG yojson
 B _build
