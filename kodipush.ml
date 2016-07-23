@@ -29,6 +29,14 @@ let server external_address filename kodi_address =
     );
   Lwt_unix.sleep 0.1 >>= fun () ->
   Kodi.player_open ("http://" ^ kodi_address) url >>= fun () ->
+  let rec old_handler = lazy (Lwt_unix.on_signal Sys.sigint @@ fun _ ->
+                              Lwt_unix.disable_signal_handler (Lazy.force old_handler);
+                              Lwt.async (fun () ->
+                                  Kodi.player_stop ("http://" ^ kodi_address) >>= fun () ->
+                                  Lwt_mvar.put server_done ();
+                                );
+                             ) in
+  ignore (Lazy.force old_handler);
   Lwt_mvar.take server_done
 
 let kodi_address =
