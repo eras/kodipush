@@ -4,4 +4,5 @@ PKG lwt.ppx
 PKG cohttp
 PKG conduit
 PKG re
+PKG cmdliner
 B _build
