@@ -14,7 +14,7 @@ let server =
     ( match meth with
       | `GET ->
 	dump uri (meth |> Code.string_of_method) (headers |> Header.to_string);
-	FileServer.get body headers uri
+	FileServer.get body headers "/etc/passwd"
       | _ -> Lwt.fail (Invalid_argument "unsupported") )
     >>= (fun (headers_out, status, body) -> Server.respond ~headers:headers_out ~status ~body ())
   in

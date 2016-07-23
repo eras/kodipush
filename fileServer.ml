@@ -55,7 +55,7 @@ let range_of_headers =
 	(range0, range1)
       | Some _ -> assert false
 	
-let get body headers uri =
+let get body headers filename =
   let range = range_of_headers headers in
   body |> Cohttp_lwt_body.to_string >>= fun _ ->
     let is_range = range <> (None, None) in
@@ -65,7 +65,7 @@ let get body headers uri =
       else `Partial_content
     in
     let headers = Header.init () in
-    body_of_file ~range "/etc/passwd" >>= fun (range_info, body) ->
+    body_of_file ~range filename >>= fun (range_info, body) ->
     let ((r0, r1), total) = range_info in
     let headers =
       if is_range then
