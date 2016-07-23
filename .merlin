@@ -5,4 +5,6 @@ PKG cohttp
 PKG conduit
 PKG re
 PKG cmdliner
+PKG extunix
+PKG containers
 B _build

@@ -6,5 +6,7 @@ true: package(cohttp), \
 	 package(conduit), \
 	 package(re), \
 	 package(re.pcre), \
-	 package(cmdliner)
+	 package(cmdliner), \
+	 package(containers), \
+	 package(extunix)
 
