@@ -54,27 +54,26 @@ let range_of_headers =
 	let range1 = Re.get subs 2 |> int_of_maybe_empty_string in
 	(range0, range1)
       | Some _ -> assert false
-	
+
 let get body headers filename =
   let range = range_of_headers headers in
-  body |> Cohttp_lwt_body.to_string >>= fun _ ->
-    let is_range = range <> (None, None) in
-    let status =
-      if is_range
-      then `OK
-      else `Partial_content
-    in
-    let headers = Header.init () in
-    body_of_file ~range filename >>= fun (range_info, body) ->
-    let ((r0, r1), total) = range_info in
-    let headers =
-      if is_range then
-	Header.add headers "Content-Range"
+  let is_range = range <> (None, None) in
+  let status =
+    if is_range
+    then `OK
+    else `Partial_content
+  in
+  let headers = Header.init () in
+  body_of_file ~range filename >>= fun (range_info, body) ->
+  let ((r0, r1), total) = range_info in
+  let headers =
+    if is_range then
+      Header.add headers "Content-Range"
         (Printf.sprintf "bytes %d-%d/%d" r0 r1 total)
 	(* headers *)
-      else 
-        headers
-    in
-    let headers = Header.add headers "Content-Length" (string_of_int (r1 - r0 + 1)) in
-    Lwt.return (headers, status, body)
+    else 
+      headers
+  in
+  let headers = Header.add headers "Content-Length" (string_of_int (r1 - r0 + 1)) in
+  Lwt.return (headers, status, body)
 
